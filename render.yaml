@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: ai-interview-coach
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: 20.19.0
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: MODEL
+        value: gemini-2.5-flash

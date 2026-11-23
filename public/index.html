@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Interview Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070b1a;--glass:rgba(255,255,255,.06);--glass2:rgba(255,255,255,.1);--line:rgba(255,255,255,.14);--ink:#f2f5ff;--mute:#a4aecb;
+--v:#8b6cff;--c:#27d9f0;--ok:#4be39a;--bad:#ff6b81;--grad:linear-gradient(135deg,var(--v),var(--c));
+--head:'Bricolage Grotesque',Georgia,serif;--body:'Figtree',system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:400 1rem/1.55 var(--body);overflow-x:hidden}
+.aurora{position:fixed;inset:0;z-index:-1;background:radial-gradient(40vw 40vw at 15% 10%,rgba(139,108,255,.35),transparent 70%),radial-gradient(45vw 45vw at 90% 30%,rgba(39,217,240,.22),transparent 70%),radial-gradient(50vw 40vw at 40% 100%,rgba(139,108,255,.2),transparent 70%)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;padding:1rem clamp(1rem,4vw,3rem)}
+.logo{font:800 1.3rem var(--head);background:none;border:0;color:var(--ink);cursor:pointer;display:flex;gap:.6rem;align-items:center;padding:0}
+.logo i{width:1.5rem;height:1.5rem;border-radius:50%;background:var(--grad);box-shadow:0 0 18px var(--v)}
+nav{display:flex;gap:.5rem}
+main{max-width:920px;margin:0 auto;padding:1rem 1rem 4rem}
+h1{font:800 clamp(2.3rem,7vw,4.2rem)/1 var(--head);letter-spacing:-.03em;margin:.5rem 0 1rem}
+h2{font:700 1.4rem var(--head);margin:2rem 0 .75rem}
+.lead{color:var(--mute);max-width:58ch;font-size:1.1rem;margin:0 0 2rem}
+.glass{background:var(--glass);border:1px solid var(--line);border-radius:20px;padding:1.4rem;backdrop-filter:blur(14px)}
+label,.lbl{display:block;font-weight:600;margin:1.1rem 0 .4rem}
+input,textarea{width:100%;font:inherit;color:var(--ink);background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:12px;padding:.8rem 1rem}
+textarea{resize:vertical;min-height:90px}
+::placeholder{color:#7d88a8}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.chip{border-radius:999px;padding:.45rem 1rem;background:var(--glass);border:1px solid var(--line);color:var(--ink);font:500 .95rem var(--body);cursor:pointer}
+.chip[aria-pressed=true]{background:var(--grad);border-color:transparent;color:#06101f;font-weight:600}
+button{font:600 1rem var(--body);cursor:pointer;border-radius:12px;border:1px solid var(--line);background:var(--glass2);color:var(--ink);padding:.7rem 1.2rem;transition:transform .15s,background .15s}
+button:hover:not(:disabled){transform:translateY(-1px);background:rgba(255,255,255,.16)}
+button.go{background:var(--grad);border:0;color:#06101f;box-shadow:0 8px 30px rgba(139,108,255,.4)}
+button.rec{background:var(--bad);border-color:var(--bad);color:#2a0710}
+button.danger{color:var(--bad)}
+button:disabled{opacity:.45;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--c);outline-offset:2px}
+.big{font-size:1.1rem;padding:.9rem 1.6rem;margin-top:1.4rem}
+.err{color:var(--bad);min-height:1.5em;margin:.6rem 0 0;font-weight:500}
+.hint{color:var(--mute);font-size:.9rem}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+/* stage */
+.dots{display:flex;gap:6px;justify-content:center;margin-bottom:1rem}
+.dots i{width:34px;height:5px;border-radius:3px;background:var(--line)}.dots i.on{background:var(--grad)}
+.stage{text-align:center;padding:1rem 0 1.5rem}
+.orb{width:130px;height:130px;margin:0 auto 1rem;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0,var(--c) 28%,var(--v) 65%,#2b1a7a);box-shadow:0 0 60px rgba(139,108,255,.7),0 0 120px rgba(39,217,240,.3);transition:filter .3s}
+.orb[data-s=speaking]{animation:pulse 1.1s ease-in-out infinite}
+.orb[data-s=listening]{filter:hue-rotate(150deg) saturate(1.4);animation:ripple 1.3s infinite}
+.orb[data-s=thinking]{animation:spin 1.6s linear infinite;filter:saturate(1.3)}
+@keyframes pulse{50%{transform:scale(1.09)}}
+@keyframes ripple{0%{box-shadow:0 0 0 0 rgba(255,107,129,.6)}100%{box-shadow:0 0 0 60px rgba(255,107,129,0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.orb{animation:none!important}}
+.state{color:var(--mute);font-weight:500;margin:0 0 .5rem}
+.q{font:700 clamp(1.4rem,3.6vw,2.1rem)/1.2 var(--head);max-width:26ch;margin:0 auto}
+/* coach */
+.coach h3{font:700 1.15rem var(--head);margin:1.2rem 0 .4rem}
+.badge{display:inline-flex;align-items:center;gap:.5rem;font:800 1.6rem var(--head);background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+mark{background:rgba(255,107,129,.25);color:#ffc2cb;border-radius:4px;padding:0 3px;text-decoration:line-through;text-decoration-color:var(--bad)}
+.fixed{background:rgba(75,227,154,.12);border:1px solid rgba(75,227,154,.4);border-radius:12px;padding:.9rem 1rem;font-size:1.05rem}
+.fix{display:grid;gap:.1rem;padding:.6rem 0;border-top:1px solid var(--line)}
+.fix s{color:#ffc2cb}.fix b{color:var(--ok)}
+.res{font-weight:600;margin:.5rem 0 0}
+.log{max-height:220px;overflow:auto;display:grid;gap:.5rem;margin-top:1rem}
+.msg{padding:.5rem .8rem;border-radius:12px;max-width:88%;font-size:.95rem}
+.msg.ai{background:var(--glass2)}.msg.me{background:rgba(139,108,255,.35);justify-self:end}
+details{margin-top:1rem}summary{cursor:pointer;color:var(--mute)}
+/* report */
+.ring{width:170px;height:170px;position:relative;flex:none}
+.ring svg{transform:rotate(-90deg)}.ring b{position:absolute;inset:0;display:grid;place-items:center;font:800 3rem var(--head)}
+.cat{margin-bottom:1rem}.cat b{text-transform:capitalize}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:.3rem 0}.bar i{display:block;height:100%;background:var(--grad)}
+ul,ol{padding-left:1.3rem;margin:.3rem 0}.hintbox{margin-bottom:1rem;padding:1rem 1.2rem;border:1px dashed var(--line);border-radius:14px}.hintbox h3{font:700 1.1rem var(--head);margin:0 0 .4rem}
+.item{display:flex;justify-content:space-between;gap:1rem;align-items:center;padding:.8rem 0;border-top:1px solid var(--line)}.item:first-child{border:0}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="aurora" aria-hidden="true"></div>
+<header class="top">
+  <button class="logo" id="home"><i></i>AI Interview Coach</button>
+  <nav><button id="nav-new">New interview</button><button id="nav-history">History</button></nav>
+</header>
+<main>
+<section id="v-setup">
+  <h1>Your interview, rehearsed out loud.</h1>
+  <p class="lead">Talk to an AI recruiter in English. After every answer, your coach shows your mistakes, gives you the corrected version, and lets you say it again until it sounds right.</p>
+  <form id="setup" class="glass" novalidate>
+    <label for="jobTitle" style="margin-top:0">Which job are you applying for?</label>
+    <input id="jobTitle" maxlength="100" placeholder="Junior Software Developer" required>
+    <div id="chipbox"></div>
+    <label for="jd">Job description (optional)</label>
+    <textarea id="jd" maxlength="3000" placeholder="Paste the job offer to get questions made for it."></textarea>
+    <p class="hint">The microphone starts only when you press Record, after your browser asks permission. Sessions are saved so you can review them, and you can delete them anytime.</p>
+    <button class="go big" id="startBtn">Start the interview</button>
+    <p class="err" id="setupErr" role="alert"></p>
+  </form>
+</section>
+
+<section id="v-live" hidden>
+  <div class="dots" id="dots" aria-hidden="true"></div>
+  <div class="stage">
+    <div class="orb" id="orb" data-s="idle" aria-hidden="true"></div>
+    <p class="state" id="state" aria-live="polite"></p>
+    <h2 class="q" id="question" style="margin-top:0"></h2>
+    <div class="row" style="justify-content:center;margin-top:1rem"><button id="replay">Replay question</button><button id="mute" aria-pressed="false">Mute recruiter</button></div>
+  </div>
+
+  <div class="glass" id="answerPane">
+    <div class="hintbox" id="hint" hidden></div>
+    <label for="answer" style="margin-top:0">Your answer</label>
+    <textarea id="answer" placeholder="Press Record and speak, or type. You can edit before sending."></textarea>
+    <div class="row" style="margin-top:.8rem">
+      <button id="recBtn" data-l="Record">Record</button>
+      <button class="go" id="sendBtn">Send answer</button>
+      <button id="hintBtn">I don't know what to say</button>
+      <button class="danger" id="endBtn">End interview</button>
+    </div>
+    <p class="err" id="liveErr" role="alert"></p>
+  </div>
+
+  <div class="glass coach" id="coachPane" hidden></div>
+  <details><summary>Conversation transcript</summary><div class="log" id="log"></div></details>
+</section>
+
+<section id="v-report" hidden>
+  <h1>Your interview report</h1><div id="report"></div>
+  <button class="go big" id="again">Practise again</button>
+</section>
+
+<section id="v-history" hidden>
+  <h1>Interview history</h1><div class="glass" id="historyList"></div>
+</section>
+</main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const el = (tag, props = {}, ...kids) => {
+  const n = Object.assign(document.createElement(tag), props);
+  kids.flat().forEach((k) => k !== '' && k != null && n.append(k instanceof Node ? k : document.createTextNode(String(k))));
+  return n;
+};
+const cid = (() => { try { let v = localStorage.getItem('cid'); if (!v) { v = crypto.randomUUID(); localStorage.setItem('cid', v); } return v; } catch { return crypto.randomUUID(); } })();
+async function api(url, method = 'GET', body) {
+  const r = await fetch(url, { method, headers: { 'content-type': 'application/json', 'x-client-id': cid }, body: body ? JSON.stringify(body) : undefined });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'Something went wrong.');
+  return d;
+}
+const show = (v) => ['setup', 'live', 'report', 'history'].forEach((x) => ($('#v-' + x).hidden = x !== v));
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let cur = null, muted = false, recog = null, recording = false, lastConf = [];
+
+// ---------- setup chips ----------
+const OPT = { type: ['General', 'HR', 'Technical', 'Internship', 'Customer Service'], level: ['Beginner', 'Entry-level', 'Experienced'],
+  difficulty: ['Easy', 'Medium', 'Advanced'], duration: [5, 10, 15], mode: ['Voice', 'Text']};
+const sel = { type: 'Technical', level: 'Entry-level', difficulty: 'Medium', duration: 10, mode: 'Voice' };
+const LBL = { type: 'Interview type', level: 'Experience level', difficulty: 'Difficulty', duration: 'Duration (minutes)', mode: 'Conversation mode' };
+Object.entries(OPT).forEach(([k, vals]) => {
+  const box = el('div', { className: 'chips', role: 'group', ariaLabel: LBL[k] });
+  vals.forEach((v) => {
+    const b = el('button', { type: 'button', className: 'chip' }, v);
+    b.setAttribute('aria-pressed', sel[k] === v);
+    b.onclick = () => { sel[k] = v; [...box.children].forEach((c) => c.setAttribute('aria-pressed', c === b)); };
+    box.append(b);
+  });
+  $('#chipbox').append(el('div', { className: 'lbl' }, LBL[k]), box);
+});
+
+// ---------- recruiter voice ----------
+const voiceOn = () => sel.mode === 'Voice' && !muted && 'speechSynthesis' in window;
+function orb(s, label) { $('#orb').dataset.s = s; $('#state').textContent = label || ''; }
+function speak(text, after) {
+  if (!voiceOn()) { after && after(); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text); u.lang = 'en-US';
+  const v = speechSynthesis.getVoices().find((x) => x.lang.startsWith('en')); if (v) u.voice = v;
+  u.onstart = () => orb('speaking', 'The recruiter is speaking');
+  u.onend = u.onerror = () => { orb('idle', 'Your turn'); after && after(); };
+  speechSynthesis.speak(u);
+}
+const addMsg = (cls, t) => { $('#log').append(el('div', { className: 'msg ' + cls }, t)); $('#log').scrollTop = 1e9; };
+function drawDots() { $('#dots').replaceChildren(...Array.from({ length: cur.maxQ }, (_, i) => el('i', { className: i < cur.n ? 'on' : '' }))); }
+function ask(text) {
+  cur.last = text; $('#question').textContent = text; addMsg('ai', text); drawDots();
+  $('#coachPane').hidden = true; $('#hint').hidden = true; $('#answerPane').hidden = false; $('#answer').value = ''; $('#sendBtn').disabled = false;
+  orb('idle', `Question ${cur.n + 1} of ${cur.maxQ}`); speak(text);
+}
+
+// ---------- microphone ----------
+function toggleRecord(ta, btn, keepConf) {
+  $('#liveErr').textContent = '';
+  if (recording) { recog && recog.stop(); return; }
+  speechSynthesis.cancel();
+  recog = new SR(); recog.lang = 'en-US'; recog.interimResults = true; recog.continuous = true;
+  const base = ta.value ? ta.value.trim() + ' ' : ''; let fin = '';
+  recog.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const r = e.results[i];
+      if (r.isFinal) { fin += r[0].transcript + ' '; keepConf && lastConf.push(r[0].confidence); } else interim += r[0].transcript;
+    }
+    ta.value = (base + fin + interim).trim();
+  };
+  recog.onerror = (e) => { $('#liveErr').textContent = e.error === 'not-allowed' ? 'Microphone blocked. Allow it in your browser, or type your answer.' : 'Speech recognition problem (' + e.error + '). You can type instead.'; };
+  recog.onend = () => { recording = false; btn.classList.remove('rec'); btn.textContent = btn.dataset.l; orb('idle', 'Your turn'); };
+  try { recog.start(); recording = true; btn.classList.add('rec'); btn.textContent = 'Stop recording'; orb('listening', 'Recording, speak now'); } catch { recording = false; }
+}
+const speakAnyway = (t) => { const was = muted; muted = false; speak(t, () => (muted = was)); };
+$('#hintBtn').onclick = async () => {
+  const b = $('#hintBtn'), box = $('#hint'); b.disabled = true; b.textContent = 'Finding ideas...'; $('#liveErr').textContent = '';
+  try {
+    const d = await api(`/api/interviews/${cur.id}/hint`, 'POST');
+    const listen = el('button', { type: 'button' }, 'Listen to the example'); listen.onclick = () => speakAnyway(d.example);
+    box.replaceChildren(
+      el('h3', {}, 'How to answer' + (d.structure ? ` (${d.structure})` : '')), el('ol', {}, d.steps.map((x) => el('li', {}, x))),
+      el('div', { className: 'lbl' }, 'Tap a sentence to start your answer'),
+      el('div', { className: 'chips' }, d.starters.map((t) => { const c = el('button', { type: 'button', className: 'chip' }, t); c.onclick = () => { const a = $('#answer'); a.value = (a.value ? a.value.trim() + ' ' : '') + t.replace(/\.{2,}|…$/, '').trim() + ' '; a.focus(); }; return c; })),
+      el('div', { className: 'lbl' }, 'Example answer (use it as a guide, then say your own truth)'), el('div', { className: 'fixed' }, d.example), el('div', { className: 'row', style: 'margin-top:.6rem' }, listen));
+    box.hidden = false;
+  } catch (err) { $('#liveErr').textContent = err.message; }
+  finally { b.disabled = false; b.textContent = "I don't know what to say"; }
+};
+$('#recBtn').onclick = () => toggleRecord($('#answer'), $('#recBtn'), true);
+
+// ---------- flow ----------
+$('#setup').addEventListener('submit', async (e) => {
+  e.preventDefault(); $('#setupErr').textContent = '';
+  const b = $('#startBtn'); b.disabled = true; b.textContent = 'Preparing your recruiter...';
+  try {
+    const d = await api('/api/interviews', 'POST', { jobTitle: $('#jobTitle').value, type: sel.type, level: sel.level, difficulty: sel.difficulty, duration: sel.duration, jobDescription: $('#jd').value });
+    cur = { id: d.id, maxQ: d.maxQ, n: 0, last: '' }; lastConf = [];
+    $('#log').replaceChildren(); $('#liveErr').textContent = '';
+    const voice = sel.mode === 'Voice';
+    $('#recBtn').hidden = !(voice && SR); $('#replay').hidden = $('#mute').hidden = !voice;
+    if (voice && !SR) $('#liveErr').textContent = 'Voice recording needs Chrome or Edge. You can type your answers.';
+    show('live'); ask(d.reply);
+  } catch (err) { $('#setupErr').textContent = err.message; }
+  finally { b.disabled = false; b.textContent = 'Start the interview'; }
+});
+$('#sendBtn').onclick = async () => {
+  const text = $('#answer').value.trim(); $('#liveErr').textContent = '';
+  if (!text) { $('#liveErr').textContent = 'Record or type an answer first.'; return; }
+  if (recording) recog.stop();
+  speechSynthesis.cancel(); $('#sendBtn').disabled = true; orb('thinking', 'Your coach is reviewing your answer...');
+  const conf = lastConf.length ? lastConf.reduce((a, b) => a + b, 0) / lastConf.length : undefined;
+  try {
+    const d = await api(`/api/interviews/${cur.id}/answer`, 'POST', { text, confidence: conf });
+    addMsg('me', text); lastConf = []; cur.n++; drawDots();
+    showCoach(text, d);
+  } catch (err) { $('#liveErr').textContent = err.message; $('#sendBtn').disabled = false; orb('idle', 'Your turn'); }
+};
+$('#replay').onclick = () => speak(cur.last);
+$('#mute').onclick = (e) => { muted = !muted; e.target.setAttribute('aria-pressed', muted); e.target.textContent = muted ? 'Unmute recruiter' : 'Mute recruiter'; if (muted) speechSynthesis.cancel(); };
+$('#endBtn').onclick = async () => {
+  if (recording) recog.stop(); speechSynthesis.cancel(); $('#liveErr').textContent = '';
+  if (!cur.n) { $('#liveErr').textContent = 'Answer at least one question to get a report.'; return; }
+  await finish($('#endBtn'));
+};
+async function finish(btn) {
+  const old = btn.textContent; btn.disabled = true; btn.textContent = 'Analysing your interview...';
+  try { const r = await api(`/api/interviews/${cur.id}/finish`, 'POST'); renderReport(r, await api(`/api/interviews/${cur.id}`)); show('report'); }
+  catch (err) { $('#liveErr').textContent = err.message; }
+  finally { btn.disabled = false; btn.textContent = old; }
+}
+
+// ---------- instant correction ----------
+function highlight(text, mistakes) {
+  const low = text.toLowerCase(), ranges = [];
+  (mistakes || []).forEach((m) => {
+    const s = String(m.said || '').toLowerCase().trim(); if (!s) return;
+    const i = low.indexOf(s);
+    if (i >= 0 && !ranges.some((r) => i < r[1] && i + s.length > r[0])) ranges.push([i, i + s.length]);
+  });
+  ranges.sort((a, b) => a[0] - b[0]);
+  const out = []; let p = 0;
+  ranges.forEach(([a, b]) => { out.push(text.slice(p, a), el('mark', {}, text.slice(a, b))); p = b; });
+  out.push(text.slice(p)); return out;
+}
+const words = (t) => t.toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').split(/\s+/).filter(Boolean);
+function similarity(target, said) {
+  const pool = words(said), t = words(target); if (!t.length) return 0;
+  let hit = 0; t.forEach((w) => { const i = pool.indexOf(w); if (i >= 0) { hit++; pool.splice(i, 1); } });
+  return Math.round((hit / t.length) * 100);
+}
+function showCoach(text, d) {
+  const f = d.feedback, pane = $('#coachPane');
+  $('#answerPane').hidden = true; pane.hidden = false; pane.replaceChildren(); orb('idle', 'Review your answer');
+  const next = el('button', { className: 'go big' }, d.done ? 'See my report' : 'Next question');
+  next.onclick = () => (d.done ? finish(next) : ask(d.reply));
+  if (!f) {
+    const retryBtn = el('button', { className: 'go' }, 'Review again');
+    const msg = el('p', { className: 'err', role: 'alert' }, d.feedbackError || 'The coach could not review this answer.');
+    retryBtn.onclick = async () => {
+      retryBtn.disabled = true; retryBtn.textContent = 'Reviewing...'; msg.textContent = '';
+      try { const r = await api(`/api/interviews/${cur.id}/review`, 'POST', { index: cur.n - 1 }); showCoach(text, { ...d, feedback: r.feedback }); }
+      catch (err) { msg.textContent = err.message; retryBtn.disabled = false; retryBtn.textContent = 'Review again'; }
+    };
+    pane.append(el('h3', {}, 'Your coach needs another try'), msg, el('p', { className: 'hint' }, 'Your answer is saved. Press Review again, or continue and see it in your final report.'),
+      el('div', { className: 'row' }, retryBtn, next));
+    return;
+  }
+  const fixed = el('div', { className: 'fixed' }, f.corrected);
+  const retry = el('textarea', { placeholder: 'Say the corrected answer out loud, or type it here.' });
+  const mic = el('button', { type: 'button', className: '', textContent: 'Record' }); mic.dataset.l = 'Record'; mic.hidden = !SR;
+  mic.onclick = () => toggleRecord(retry, mic, false);
+  const res = el('p', { className: 'res', ariaLive: 'polite' });
+  const check = el('button', { className: 'go' }, 'Check my answer');
+  check.onclick = () => {
+    if (recording) recog.stop();
+    const sc = similarity(f.corrected, retry.value);
+    res.textContent = !retry.value.trim() ? 'Say or type your answer first.' : sc >= 85 ? `${sc}% match. Excellent, that is the version to use.` : sc >= 60 ? `${sc}% match. Close, look at the green text and try once more.` : `${sc}% match. Read the corrected answer slowly, then try again.`;
+    res.style.color = sc >= 85 ? 'var(--ok)' : 'var(--ink)';
+  };
+  const listen = el('button', { type: 'button' }, 'Listen to it');
+  listen.onclick = () => speakAnyway(f.corrected);
+  pane.append(
+    el('div', { className: 'row', style: 'justify-content:space-between' }, el('span', { className: 'badge' }, `${Math.round(f.score)}/100`), el('span', {}, f.good || '')),
+    f.quality === 'weak' ? el('p', { className: 'hint' }, 'This answer was short or unclear. That is normal: use the model answer below as your base, then make it yours.') : '',
+    el('h3', {}, 'What you said'), el('p', {}, highlight(text, f.mistakes)),
+    el('h3', {}, 'Say it like this'), fixed, el('div', { className: 'row', style: 'margin-top:.6rem' }, listen),
+    f.steps?.length ? el('h3', {}, 'How to build this answer' + (f.structure ? ` (${f.structure})` : '')) : '', f.steps?.length ? el('ol', {}, f.steps.map((x) => el('li', {}, x))) : '',
+    f.adapt?.length ? el('p', {}, el('b', {}, 'Replace with your own real details: '), f.adapt.join('; ')) : '',
+    f.mistakes?.length ? el('h3', {}, 'What to fix') : '',
+    (f.mistakes || []).map((m) => el('div', { className: 'fix' }, el('span', {}, el('s', {}, m.said), ' becomes ', el('b', {}, m.better)), el('span', { className: 'hint' }, m.why))),
+    f.tip ? el('p', {}, el('b', {}, 'Tip: '), f.tip) : '',
+    el('h3', {}, 'Now you try'), retry, el('div', { className: 'row', style: 'margin-top:.6rem' }, mic, check), res,
+    el('div', { style: 'margin-top:1rem' }, next));
+}
+
+// ---------- report ----------
+const list = (items) => el('ul', {}, (items || []).map((i) => el('li', {}, i)));
+function renderReport(r, s) {
+  const box = $('#report'); box.replaceChildren();
+  const C = 2 * Math.PI * 70, o = Math.max(0, Math.min(100, r.overall));
+  const ring = el('div', { className: 'ring' });
+  ring.innerHTML = `<svg width="170" height="170" viewBox="0 0 170 170"><defs><linearGradient id="g"><stop offset="0" stop-color="#8b6cff"/><stop offset="1" stop-color="#27d9f0"/></linearGradient></defs><circle cx="85" cy="85" r="70" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="12"/><circle cx="85" cy="85" r="70" fill="none" stroke="url(#g)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C * o / 100} ${C}"/></svg>`;
+  ring.append(el('b', {}, Math.round(o)));
+  box.append(el('div', { className: 'glass row', style: 'gap:1.5rem' }, ring, el('p', { className: 'hint', style: 'flex:1;min-width:220px' }, 'Overall practice score. Pronunciation, fluency and confidence are rough coaching estimates, not a certified language test and never a hiring decision. AI feedback can contain mistakes.')));
+  const cats = el('div', { className: 'glass', style: 'margin-top:1rem' });
+  Object.entries(r.categories).forEach(([k, v]) => cats.append(el('div', { className: 'cat' }, el('b', {}, `${k}: ${Math.round(v.score)}`), el('div', { className: 'bar' }, el('i', { style: `width:${Math.max(0, Math.min(100, v.score))}%` })), el('span', {}, v.feedback))));
+  box.append(cats);
+  const sec = (t, items) => items?.length && box.append(el('h2', {}, t), el('div', { className: 'glass' }, list(items)));
+  sec('Strengths', r.strengths); sec('Areas to improve', r.improvements); sec('Recurring mistakes', r.recurringMistakes);
+  sec('Recommended vocabulary', r.vocabulary); sec('Suggested exercises', r.exercises);
+  box.append(el('h2', {}, 'Answer by answer'));
+  const ans = el('div', { className: 'glass' });
+  (s.answers || []).forEach((a, i) => {
+    const f = (r.answers || []).find((x) => x.index === i + 1) || {}, fb = a.feedback || {};
+    ans.append(el('details', {}, el('summary', {}, `Q${i + 1}: ${a.question}`),
+      el('p', {}, el('b', {}, 'You said: '), a.answer),
+      (fb.corrected || f.betterAnswer) ? el('p', {}, el('b', {}, 'Corrected: '), fb.corrected || f.betterAnswer) : '',
+      f.corrections?.length ? el('div', {}, el('b', {}, 'Corrections'), list(f.corrections)) : '',
+      f.expressions?.length ? el('div', {}, el('b', {}, 'Useful expressions'), list(f.expressions)) : '',
+      f.tip ? el('p', {}, el('b', {}, 'Tip: '), f.tip) : ''));
+  });
+  box.append(ans);
+}
+
+// ---------- history ----------
+async function loadHistory() {
+  const box = $('#historyList'); show('history');
+  try {
+    const items = await api('/api/interviews');
+    box.replaceChildren(...(items.length ? items.map((s) => el('div', { className: 'item' },
+      el('div', {}, el('b', {}, s.setup.jobTitle), el('div', { className: 'hint' }, `${s.setup.type}, ${s.setup.difficulty}, ${new Date(s.createdAt).toLocaleString()}` + (s.overall != null ? `, score ${Math.round(s.overall)}` : ', no report'))),
+      el('div', { className: 'row' },
+        s.overall != null ? el('button', { onclick: async () => { const d = await api('/api/interviews/' + s.id); renderReport(d.report, d); show('report'); } }, 'Open report') : '',
+        el('button', { className: 'danger', onclick: async () => { if (confirm('Delete this practice session?')) { await api('/api/interviews/' + s.id, 'DELETE'); loadHistory(); } } }, 'Delete')))) : [el('p', {}, 'No interviews yet. Start your first one.')]));
+  } catch (err) { box.replaceChildren(el('p', { className: 'err' }, err.message)); }
+}
+$('#again').onclick = $('#home').onclick = $('#nav-new').onclick = () => show('setup');
+$('#nav-history').onclick = loadHistory;
+if ('speechSynthesis' in window) speechSynthesis.getVoices();
+</script>
+</body>
+</html>
